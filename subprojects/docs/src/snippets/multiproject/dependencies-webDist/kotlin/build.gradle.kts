@@ -1,22 +1,17 @@
-allprojects {
-    apply(plugin = "java")
-    group = "org.gradle.sample"
-    version = "1.0"
+version = "1.0"
+
+configurations {
+    create("wars") {
+        attributes.attribute(Attribute.of("type", String::class.java), "war")
+    }
 }
 
-subprojects {
-    apply(plugin = "war")
-    repositories {
-        mavenCentral()
-    }
-    dependencies {
-        "providedCompile"("javax.servlet:servlet-api:2.5")
-    }
+dependencies {
+    "wars"(project("date"))
+    "wars"(project("hello"))
 }
 
 tasks.register<Copy>("explodedDist") {
+    from(configurations["wars"])
     into("$buildDir/explodedDist")
-    subprojects {
-        from(tasks.withType<War>())
-    }
 }

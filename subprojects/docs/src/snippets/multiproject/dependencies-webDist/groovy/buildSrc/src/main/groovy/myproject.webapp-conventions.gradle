@@ -1,0 +1,24 @@
+plugins {
+    id 'java'
+    id 'war'
+}
+
+group = 'org.gradle.sample'
+version = rootProject.version
+
+repositories {
+    mavenCentral()
+}
+
+configurations {
+    wars {
+        attributes.attribute(Attribute.of('type', String), 'war')
+        outgoing.artifact(tasks.war)
+        canBeResolved = false
+        canBeConsumed = true
+    }
+}
+
+dependencies {
+    implementation "javax.servlet:servlet-api:2.5"
+}
