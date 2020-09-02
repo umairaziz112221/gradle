@@ -20,17 +20,23 @@ import org.gradle.api.file.Directory;
 import org.gradle.buildinit.plugins.internal.modifiers.BuildInitDsl;
 import org.gradle.buildinit.plugins.internal.modifiers.BuildInitTestFramework;
 
+import java.util.Collections;
+import java.util.List;
+
 public class InitSettings {
     private final BuildInitDsl dsl;
     private final String packageName;
     private final BuildInitTestFramework testFramework;
     private final String projectName;
-    private final String subprojectName;
+    private final List<String> subprojects;
+    private final boolean modularized;
     private final Directory target;
 
-    public InitSettings(String projectName, String subprojectName, BuildInitDsl dsl, String packageName, BuildInitTestFramework testFramework, Directory target) {
+    public InitSettings(String projectName, List<String> subprojects,
+                        boolean modularized, BuildInitDsl dsl, String packageName, BuildInitTestFramework testFramework, Directory target) {
         this.projectName = projectName;
-        this.subprojectName = subprojectName;
+        this.subprojects = subprojects.isEmpty() || modularized ? subprojects : Collections.singletonList(subprojects.get(0));
+        this.modularized = modularized;
         this.dsl = dsl;
         this.packageName = packageName;
         this.testFramework = testFramework;
@@ -41,8 +47,12 @@ public class InitSettings {
         return projectName;
     }
 
-    public String getSubprojectName() {
-        return subprojectName;
+    public List<String> getSubprojects() {
+        return subprojects;
+    }
+
+    public boolean isModularized() {
+        return modularized;
     }
 
     public BuildInitDsl getDsl() {

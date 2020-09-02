@@ -23,7 +23,9 @@ public abstract class JvmProjectInitDescriptor extends LanguageLibraryProjectIni
     }
 
     @Override
-    public void generate(InitSettings settings, BuildScriptBuilder buildScriptBuilder, TemplateFactory templateFactory) {
-        buildScriptBuilder.repositories().jcenter("Use JCenter for resolving dependencies.");
+    public void generateBuildScript(String projectOrConventionName, InitSettings settings, BuildScriptBuilder buildScriptBuilder) {
+        if (!settings.isModularized() || projectOrConventionName.equals("common")) {
+            buildScriptBuilder.repositories().jcenter("Use JCenter for resolving dependencies.");
+        }
     }
 }

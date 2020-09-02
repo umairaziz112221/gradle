@@ -28,6 +28,11 @@ public abstract class LanguageLibraryProjectInitDescriptor implements LanguageSp
     }
 
     @Override
+    public boolean supportsModularization() {
+        return false;
+    }
+
+    @Override
     public Optional<String> getFurtherReading() {
         return Optional.empty();
     }

@@ -39,27 +39,84 @@ public class JavaApplicationProjectInitDescriptor extends JavaProjectInitDescrip
     }
 
     @Override
+    public boolean supportsModularization() {
+        return true;
+    }
+
+    @Override
+    public void generateBuildScript(String projectOrConventionName, InitSettings settings, BuildScriptBuilder buildScriptBuilder) {
+        super.generateBuildScript(projectOrConventionName, settings, buildScriptBuilder);
+
+        if (settings.isModularized()) {
+            if ("app".equals(projectOrConventionName)) {
+                buildScriptBuilder
+                    .plugin(null, settings.getPackageName() + ".java-application-conventions")
+                    .block(null, "application", b -> b.propertyAssignment("Define the main class for the application.", "mainClass", withPackage(settings, "app.App"), false))
+                    .dependencies().projectDependency("implementation", null, ":utilities");
+            } else {
+                if ("utilities".equals(projectOrConventionName)) {
+                    buildScriptBuilder
+                        .plugin(null, settings.getPackageName() + ".java-library-conventions")
+                        .dependencies().projectDependency("api", null, ":list");
+                } else if ("list".equals(projectOrConventionName)) {
+                    buildScriptBuilder
+                        .plugin(null, settings.getPackageName() + ".java-library-conventions");
+                }
+            }
+        }
+    }
+
+    @Override
+    public void generateSources(InitSettings settings, TemplateFactory templateFactory) {
+        super.generateSources(settings, templateFactory);
+
+        if (settings.isModularized()) {
+            templateFactory.whenNoSourcesAvailable(
+                templateFactory.fromSourceTemplate("javaapp/multi/app/App.java.template", "main"),
+                templateFactory.fromSourceTemplate("javaapp/multi/app/MessageUtils.java.template", "main"),
+                templateFactory.fromSourceTemplate("javaapp/multi/app/junit5/MessageUtilsTest.java.template", "test")
+            ).generate();
+
+            templateFactory.whenNoSourcesAvailable("list",
+                templateFactory.fromSourceTemplate("javaapp/multi/list/LinkedList.java.template", "main", "list"),
+                templateFactory.fromSourceTemplate("javaapp/multi/list/junit5/LinkedListTest.java.template", "test", "list")
+            ).generate();
+
+            templateFactory.whenNoSourcesAvailable("utilities",
+                templateFactory.fromSourceTemplate("javaapp/multi/utilities/JoinUtils.java.template", "main", "utilities"),
+                templateFactory.fromSourceTemplate("javaapp/multi/utilities/SplitUtils.java.template", "main", "utilities"),
+                templateFactory.fromSourceTemplate("javaapp/multi/utilities/StringUtils.java.template", "main", "utilities")
+            ).generate();
+        }
+    }
+
+    @Override
     protected void configureBuildScript(InitSettings settings, BuildScriptBuilder buildScriptBuilder) {
-        super.configureBuildScript(settings, buildScriptBuilder);
+        configureApplicationBuildScript(buildScriptBuilder);
+
         buildScriptBuilder
-            .plugin(
-                "Apply the application plugin to add support for building a CLI application in Java.",
-                "application")
+            .block(null, "application", b -> b.propertyAssignment("Define the main class for the application.", "mainClass", withPackage(settings, "App"), false))
             .implementationDependency("This dependency is used by the application.",
-                "com.google.guava:guava:" + libraryVersionProvider.getVersion("guava"))
-            .block(null, "application", b -> b.propertyAssignment("Define the main class for the application.", "mainClass", withPackage(settings, "App"), false));
+                "com.google.guava:guava:" + libraryVersionProvider.getVersion("guava"));
     }
 
     @Override
     protected TemplateOperation sourceTemplateOperation(InitSettings settings, TemplateFactory templateFactory) {
-        return templateFactory.fromSourceTemplate("javaapp/App.java.template", "main");
+        if (settings.isModularized()) {
+            return () -> {};
+        } else {
+            return templateFactory.fromSourceTemplate("javaapp/App.java.template", "main");
+        }
     }
 
     @Override
     protected TemplateOperation testTemplateOperation(InitSettings settings, TemplateFactory templateFactory) {
+        if (settings.isModularized()) {
+            return () -> {};
+        }
         switch (settings.getTestFramework()) {
             case SPOCK:
-                return templateFactory.fromSourceTemplate("groovyapp/AppTest.groovy.template", "test", Language.GROOVY);
+                return templateFactory.fromSourceTemplate("groovyapp/AppTest.groovy.template", "test", settings.getSubprojects().get(0), Language.GROOVY);
             case TESTNG:
                 return templateFactory.fromSourceTemplate("javaapp/testng/AppTest.java.template", "test");
             case JUNIT:

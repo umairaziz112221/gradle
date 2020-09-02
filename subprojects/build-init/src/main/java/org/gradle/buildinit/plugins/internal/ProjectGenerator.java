@@ -34,6 +34,8 @@ public interface ProjectGenerator extends BuildContentGenerator {
 
     Language getLanguage();
 
+    boolean supportsModularization();
+
     Optional<String> getFurtherReading();
 
     /**

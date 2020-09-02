@@ -60,6 +60,11 @@ public class BasicProjectGenerator implements ProjectGenerator {
     }
 
     @Override
+    public boolean supportsModularization() {
+        return false;
+    }
+
+    @Override
     public BuildInitDsl getDefaultDsl() {
         return BuildInitDsl.GROOVY;
     }

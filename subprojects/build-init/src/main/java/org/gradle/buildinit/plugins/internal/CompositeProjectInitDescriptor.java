@@ -23,6 +23,7 @@ import org.gradle.buildinit.plugins.internal.modifiers.Language;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.TreeSet;
@@ -49,6 +50,11 @@ public class CompositeProjectInitDescriptor implements BuildInitializer {
     @Override
     public Language getLanguage() {
         return descriptor.getLanguage();
+    }
+
+    @Override
+    public boolean supportsModularization() {
+        return descriptor.supportsModularization();
     }
 
     @Override
@@ -94,7 +100,7 @@ public class CompositeProjectInitDescriptor implements BuildInitializer {
         descriptor.generate(settings);
     }
 
-    public List<String> generateWithExternalComments(InitSettings settings) {
+    public Map<String, List<String>> generateWithExternalComments(InitSettings settings) {
         if (!(descriptor instanceof LanguageSpecificAdaptor)) {
             throw new UnsupportedOperationException();
         }

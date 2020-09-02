@@ -276,6 +276,8 @@ include("child")
                     groovy
                     kotlin
 
+     --modularized     Should the build be modularized?
+
      --package     Set the package for source files.
 
      --project-name     Set the project name.

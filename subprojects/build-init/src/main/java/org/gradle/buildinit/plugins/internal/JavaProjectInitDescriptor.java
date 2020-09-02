@@ -51,17 +51,36 @@ public abstract class JavaProjectInitDescriptor extends JvmProjectInitDescriptor
     }
 
     @Override
-    public void generate(InitSettings settings, BuildScriptBuilder buildScriptBuilder, TemplateFactory templateFactory) {
-        super.generate(settings, buildScriptBuilder, templateFactory);
-
+    public void generateBuildScript(String projectOrConventionName, InitSettings settings, BuildScriptBuilder buildScriptBuilder) {
+        super.generateBuildScript(projectOrConventionName, settings, buildScriptBuilder);
         Description desc = getDescription();
-        buildScriptBuilder
-            .fileComment("This generated file contains a sample " + desc.projectType + " project to get you started.")
-            .fileComment("For more details take a look at the " + desc.chapterName + " chapter in the Gradle")
-            .fileComment("User Manual available at " + documentationRegistry.getDocumentationFor(desc.userguideId));
-        configureBuildScript(settings, buildScriptBuilder);
-        addTestFramework(settings.getTestFramework(), buildScriptBuilder);
 
+        if (!settings.isModularized()) {
+            buildScriptBuilder
+                .fileComment("This generated file contains a sample " + desc.projectType + " project to get you started.")
+                .fileComment("For more details take a look at the " + desc.chapterName + " chapter in the Gradle")
+                .fileComment("User Manual available at " + documentationRegistry.getDocumentationFor(desc.userguideId));
+            configureBuildScript(settings, buildScriptBuilder);
+            addTestFramework(settings.getTestFramework(), buildScriptBuilder);
+        } else {
+            if ("common".equals(projectOrConventionName)) {
+                buildScriptBuilder.plugin(null, "java");
+                addTestFramework(settings.getTestFramework(), buildScriptBuilder);
+            } else {
+                if ("library".equals(projectOrConventionName)) {
+                    buildScriptBuilder.plugin(null, settings.getPackageName() + ".java-common-conventions");
+                    configureLibraryBuildScript(buildScriptBuilder);
+                }
+                if ("application".equals(projectOrConventionName)) {
+                    buildScriptBuilder.plugin(null, settings.getPackageName() + ".java-common-conventions");
+                    configureApplicationBuildScript(buildScriptBuilder);
+                }
+            }
+        }
+    }
+
+    @Override
+    public void generateSources(InitSettings settings, TemplateFactory templateFactory) {
         TemplateOperation sourceTemplate = sourceTemplateOperation(settings, templateFactory);
         TemplateOperation testSourceTemplate = testTemplateOperation(settings, templateFactory);
         templateFactory.whenNoSourcesAvailable(sourceTemplate, testSourceTemplate).generate();
@@ -113,6 +132,19 @@ public abstract class JavaProjectInitDescriptor extends JvmProjectInitDescriptor
                 buildScriptBuilder.testImplementationDependency("Use JUnit test framework.", "junit:junit:" + libraryVersionProvider.getVersion("junit"));
                 break;
         }
+    }
+
+    protected void configureApplicationBuildScript(BuildScriptBuilder buildScriptBuilder) {
+        buildScriptBuilder
+            .plugin(
+                "Apply the application plugin to add support for building a CLI application in Java.",
+                "application");
+    }
+
+    protected void configureLibraryBuildScript(BuildScriptBuilder buildScriptBuilder) {
+        buildScriptBuilder.plugin(
+            "Apply the java-library plugin for API and implementation separation.",
+            "java-library");
     }
 
     protected void configureBuildScript(InitSettings settings, BuildScriptBuilder buildScriptBuilder) {

@@ -53,7 +53,7 @@ public class JavaLibraryProjectInitDescriptor extends JavaProjectInitDescriptor 
     protected TemplateOperation testTemplateOperation(InitSettings settings, TemplateFactory templateFactory) {
         switch (settings.getTestFramework()) {
             case SPOCK:
-                return templateFactory.fromSourceTemplate("groovylibrary/LibraryTest.groovy.template", "test", Language.GROOVY);
+                return templateFactory.fromSourceTemplate("groovylibrary/LibraryTest.groovy.template", "test", settings.getSubprojects().get(0), Language.GROOVY);
             case TESTNG:
                 return templateFactory.fromSourceTemplate("javalibrary/testng/LibraryTest.java.template", "test");
             case JUNIT:
@@ -72,9 +72,8 @@ public class JavaLibraryProjectInitDescriptor extends JavaProjectInitDescriptor 
 
     @Override
     protected void configureBuildScript(InitSettings settings, BuildScriptBuilder buildScriptBuilder) {
-        buildScriptBuilder.plugin(
-            "Apply the java-library plugin for API and implementation separation.",
-            "java-library");
+        configureLibraryBuildScript(buildScriptBuilder);
+
         buildScriptBuilder.dependency(
             "api",
             "This dependency is exported to consumers, that is to say found on their compile classpath.",

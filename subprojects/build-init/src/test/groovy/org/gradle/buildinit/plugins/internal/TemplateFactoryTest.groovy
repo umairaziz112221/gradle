@@ -34,7 +34,7 @@ class TemplateFactoryTest extends Specification {
     def "generates from template within sourceSet"() {
         setup:
         def targetAsFile = new File(target)
-        def settings = new InitSettings("project", "app", BuildInitDsl.GROOVY, "", BuildInitTestFramework.NONE, targetDir)
+        def settings = new InitSettings("project", ["app"], false, BuildInitDsl.GROOVY, "", BuildInitTestFramework.NONE, targetDir)
         def factory = new TemplateFactory(settings, Language.withName(language), templateOperationFactory)
 
         when:
@@ -60,7 +60,7 @@ class TemplateFactoryTest extends Specification {
     def "generates source file with package from template"() {
         setup:
         def targetAsFile = new File(target)
-        def settings = new InitSettings("project", "app", BuildInitDsl.GROOVY, "my.lib", BuildInitTestFramework.NONE, targetDir)
+        def settings = new InitSettings("project", ["app"], false, BuildInitDsl.GROOVY, "my.lib", BuildInitTestFramework.NONE, targetDir)
         def factory = new TemplateFactory(settings, Language.withName(language), templateOperationFactory)
 
         when:
@@ -86,7 +86,7 @@ class TemplateFactoryTest extends Specification {
     def "can specify output class name"() {
         setup:
         def targetAsFile = new File(target)
-        def settings = new InitSettings("project", "app", BuildInitDsl.GROOVY, packageName, BuildInitTestFramework.NONE, targetDir)
+        def settings = new InitSettings("project", ["app"], false, BuildInitDsl.GROOVY, packageName, BuildInitTestFramework.NONE, targetDir)
         def factory = new TemplateFactory(settings, Language.withName("somelang"), templateOperationFactory)
 
         when:
@@ -117,7 +117,7 @@ class TemplateFactoryTest extends Specification {
         def mainSourceFileTree = Mock(FileTreeInternal)
         def testSourceFileTree  = Mock(FileTreeInternal)
         def delegate = Mock(TemplateOperation)
-        def settings = new InitSettings("project", "app", BuildInitDsl.GROOVY, "my.lib", BuildInitTestFramework.NONE, targetDir)
+        def settings = new InitSettings("project", ["app"], false, BuildInitDsl.GROOVY, "my.lib", BuildInitTestFramework.NONE, targetDir)
         def factory = new TemplateFactory(settings, Language.withName("somelang"), templateOperationFactory)
 
         when:

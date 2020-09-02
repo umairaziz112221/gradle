@@ -63,6 +63,11 @@ public class PomProjectInitDescriptor implements BuildConverter {
     }
 
     @Override
+    public boolean supportsModularization() {
+        return false;
+    }
+
+    @Override
     public String getSourceBuildDescription() {
         return "Maven";
     }

@@ -93,6 +93,14 @@ class BuildInitInteractiveIntegrationTest extends AbstractInitIntegrationSpec {
         }
         handle.stdinPipe.write(("3" + TextUtil.platformLineSeparator).bytes)
 
+        // Select 'No'
+        ConcurrentTestUtil.poll(60) {
+            assert handle.standardOutput.contains("Modularize project?:")
+            assert handle.standardOutput.contains("1: Yes")
+            assert handle.standardOutput.contains("2: No")
+        }
+        handle.stdinPipe.write(("2" + TextUtil.platformLineSeparator).bytes)
+
         // Select 'kotlin' DSL
         ConcurrentTestUtil.poll(60) {
             assert handle.standardOutput.contains(dslPrompt)

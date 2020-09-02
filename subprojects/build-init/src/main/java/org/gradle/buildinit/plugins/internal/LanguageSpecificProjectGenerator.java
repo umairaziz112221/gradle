@@ -30,6 +30,8 @@ public interface LanguageSpecificProjectGenerator {
 
     Language getLanguage();
 
+    boolean supportsModularization();
+
     Optional<String> getFurtherReading();
 
     Set<BuildInitTestFramework> getTestFrameworks();
@@ -38,5 +40,7 @@ public interface LanguageSpecificProjectGenerator {
 
     boolean supportsPackage();
 
-    void generate(InitSettings settings, BuildScriptBuilder buildScriptBuilder, TemplateFactory templateFactory);
+    void generateBuildScript(String projectOrConventionName, InitSettings settings, BuildScriptBuilder buildScriptBuilder);
+
+    void generateSources(InitSettings settings, TemplateFactory templateFactory);
 }

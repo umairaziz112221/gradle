@@ -40,6 +40,11 @@ public interface BuildInitializer extends BuildContentGenerator {
     Language getLanguage();
 
     /**
+     * Can this type of project be split-up into multiple subprojects?
+     */
+    boolean supportsModularization();
+
+    /**
      * Returns the set of DSLs supported for this type of project.
      */
     Set<BuildInitDsl> getDsls();
