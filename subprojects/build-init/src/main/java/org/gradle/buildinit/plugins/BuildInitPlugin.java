@@ -16,15 +16,19 @@
 
 package org.gradle.buildinit.plugins;
 
+import gradlebuild.docs.samples.GenerateSample;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
 import org.gradle.api.Task;
 import org.gradle.api.file.ProjectLayout;
 import org.gradle.api.logging.Logger;
 import org.gradle.api.specs.Spec;
+import org.gradle.api.tasks.TaskProvider;
+import org.gradle.buildinit.plugins.internal.ProjectLayoutSetupRegistry;
 import org.gradle.buildinit.plugins.internal.modifiers.BuildInitDsl;
 import org.gradle.buildinit.tasks.InitBuild;
 
+import javax.inject.Inject;
 import java.io.File;
 import java.util.concurrent.Callable;
 
@@ -32,6 +36,11 @@ import java.util.concurrent.Callable;
  * The build init plugin.
  */
 public class BuildInitPlugin implements Plugin<Project> {
+
+    @Inject
+    protected ProjectLayoutSetupRegistry getProjectLayoutRegistry() {
+        throw new UnsupportedOperationException();
+    }
 
     @Override
     public void apply(Project project) {
@@ -47,6 +56,27 @@ public class BuildInitPlugin implements Plugin<Project> {
                 initBuild.onlyIf(new InitBuildOnlyIfSpec(buildFile, hasSubProjects, project.getLayout(), initBuild.getLogger()));
                 initBuild.dependsOn(new InitBuildDependsOnCallable(buildFile, hasSubProjects, project.getLayout()));
             });
+        }
+
+        TaskProvider<Task> generateInitSamples = project.getTasks().register("generateInitSamples");
+
+        for (String type : getProjectLayoutRegistry().getAllTypes()) {
+            if (type.endsWith("-library") || type.endsWith("-application")) {
+                TaskProvider<GenerateSample> generateSample = project.getTasks().register("generate-" + type, GenerateSample.class, t -> {
+                    t.getTarget().set(project.getLayout().getBuildDirectory().dir("samples/" + type));
+                    t.getModularized().set(false);
+                    t.getType().set(type);
+                });
+                generateInitSamples.configure(a -> a.dependsOn(generateSample));
+            }
+            if (type.endsWith("java-application")) {
+                TaskProvider<GenerateSample> generateSample = project.getTasks().register("generate-" + type + "-modularized", GenerateSample.class, t -> {
+                    t.getTarget().set(project.getLayout().getBuildDirectory().dir("samples/" + type + "-modularized"));
+                    t.getModularized().set(true);
+                    t.getType().set(type);
+                });
+                generateInitSamples.configure(a -> a.dependsOn(generateSample));
+            }
         }
     }
 
