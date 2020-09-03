@@ -68,14 +68,16 @@ import org.gradle.jvm.internal.toolchain.JavaToolChainInternal;
 import org.gradle.jvm.platform.JavaPlatform;
 import org.gradle.jvm.platform.internal.DefaultJavaPlatform;
 import org.gradle.jvm.toolchain.JavaCompiler;
-import org.gradle.jvm.toolchain.JavaToolChain;
 import org.gradle.jvm.toolchain.JavaInstallationMetadata;
+import org.gradle.jvm.toolchain.JavaToolChain;
 import org.gradle.jvm.toolchain.internal.DefaultToolchainJavaCompiler;
+import org.gradle.jvm.toolchain.internal.JavaToolchain;
 import org.gradle.language.base.internal.compile.Compiler;
 import org.gradle.language.base.internal.compile.CompilerUtil;
 import org.gradle.work.Incremental;
 import org.gradle.work.InputChanges;
 
+import javax.annotation.Nullable;
 import javax.inject.Inject;
 import java.io.File;
 import java.util.List;
@@ -319,7 +321,11 @@ public class JavaCompile extends AbstractCompile implements HasCompileOptions {
     @Nested
     @Deprecated
     protected JavaPlatform getPlatform() {
-        return new DefaultJavaPlatform(JavaVersion.toVersion(getTargetCompatibility()));
+        Object targetCompatibility = getTargetCompatibility();
+        if (compileOptions.getRelease().isPresent()) {
+            targetCompatibility = compileOptions.getRelease().get();
+        }
+        return new DefaultJavaPlatform(JavaVersion.toVersion(targetCompatibility));
     }
 
     /**
@@ -350,12 +356,7 @@ public class JavaCompile extends AbstractCompile implements HasCompileOptions {
         JavaModuleDetector javaModuleDetector = getJavaModuleDetector();
         boolean isModule = JavaModuleDetector.isModuleSource(modularity.getInferModulePath().get(), sourcesRoots);
 
-        if (javaCompiler.isPresent()) {
-            compileOptions.setFork(true);
-            final JavaInstallationMetadata toolchain = javaCompiler.get().getMetadata();
-            compileOptions.getForkOptions().setJavaHome(toolchain.getInstallationPath().getAsFile());
-        }
-        final DefaultJavaCompileSpec spec = new DefaultJavaCompileSpecFactory(compileOptions).create();
+        final DefaultJavaCompileSpec spec = createBaseSpec();
         spec.setDestinationDir(getDestinationDirectory().getAsFile().get());
         spec.setWorkingDir(getProjectLayout().getProjectDirectory().getAsFile());
         spec.setTempDir(getTemporaryDir());
@@ -367,17 +368,44 @@ public class JavaCompile extends AbstractCompile implements HasCompileOptions {
         spec.setAnnotationProcessorPath(compileOptions.getAnnotationProcessorPath() == null ? ImmutableList.of() : ImmutableList.copyOf(compileOptions.getAnnotationProcessorPath()));
         configureCompatibilityOptions(spec);
         spec.setSourcesRoots(sourcesRoots);
-        if (((JavaToolChainInternal) getToolChain()).getJavaVersion().compareTo(JavaVersion.VERSION_1_8) < 0) {
+        if (!isToolchainCompatibleWithJava8()) {
             spec.getCompileOptions().setHeaderOutputDirectory(null);
         }
         return spec;
     }
 
-    private void configureCompatibilityOptions(DefaultJavaCompileSpec spec) {
+    private boolean isToolchainCompatibleWithJava8() {
+        JavaToolchain newToolchain = getToolchain();
+        if (newToolchain != null) {
+            return newToolchain.getLanguageVersion().canCompileOrRun(8);
+        }
+        return ((JavaToolChainInternal) getToolChain()).getJavaVersion().isJava8Compatible();
+    }
+
+    private DefaultJavaCompileSpec createBaseSpec() {
+        final ForkOptions forkOptions = compileOptions.getForkOptions();
         if (javaCompiler.isPresent()) {
-            final JavaInstallationMetadata toolchain = javaCompiler.get().getMetadata();
-            spec.setTargetCompatibility(toolchain.getLanguageVersion().asString());
-            spec.setSourceCompatibility(toolchain.getLanguageVersion().asString());
+            applyToolchain(forkOptions);
+        }
+        return new DefaultJavaCompileSpecFactory(compileOptions, getToolchain()).create();
+    }
+
+    private void applyToolchain(ForkOptions forkOptions) {
+        final JavaToolchain toolchain = getToolchain();
+        forkOptions.setJavaHome(toolchain.getInstallationPath().getAsFile());
+    }
+
+    @Nullable
+    private JavaToolchain getToolchain() {
+        return javaCompiler.map(c -> ((DefaultToolchainJavaCompiler) javaCompiler.get()).getToolchain()).getOrNull();
+    }
+
+    private void configureCompatibilityOptions(DefaultJavaCompileSpec spec) {
+        final JavaToolchain toolchain = getToolchain();
+        if (toolchain != null) {
+            final JavaInstallationMetadata metadata = javaCompiler.get().getMetadata();
+            spec.setTargetCompatibility(metadata.getLanguageVersion().asString());
+            spec.setSourceCompatibility(metadata.getLanguageVersion().asString());
         } else if (compileOptions.getRelease().isPresent()) {
             spec.setRelease(compileOptions.getRelease().get());
         } else {

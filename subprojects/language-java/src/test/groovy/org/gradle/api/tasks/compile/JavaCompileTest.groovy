@@ -19,6 +19,8 @@ package org.gradle.api.tasks.compile
 import org.gradle.api.JavaVersion
 import org.gradle.api.internal.file.TestFiles
 import org.gradle.api.internal.tasks.compile.CommandLineJavaCompileSpec
+import org.gradle.api.file.Directory
+import org.gradle.api.internal.tasks.compile.DefaultJavaCompileSpec
 import org.gradle.internal.jvm.Jvm
 import org.gradle.jvm.toolchain.JavaCompiler
 import org.gradle.jvm.toolchain.JavaToolChain
@@ -81,7 +83,7 @@ class JavaCompileTest extends AbstractProjectBuilderSpec {
         e.message == "Must not use `exectuable` property on `ForkOptions` together with `javaCompiler` property"
     }
 
-    def "spec is configured using the toolchain compiler via command line"() {
+    def "spec is configured using the toolchain compiler in-process using the current jvm as toolchain"() {
         def javaCompile = project.tasks.create("compileJava", JavaCompile)
         def javaHome = Jvm.current().javaHome
         def probe = Mock(JavaInstallationProbe.ProbeResult)
@@ -95,10 +97,21 @@ class JavaCompileTest extends AbstractProjectBuilderSpec {
         def spec = javaCompile.createSpec()
 
         then:
-        spec instanceof CommandLineJavaCompileSpec
+        spec instanceof DefaultJavaCompileSpec
         spec.compileOptions.forkOptions.javaHome == javaHome
         spec.getSourceCompatibility() == "12"
         spec.getTargetCompatibility() == "12"
     }
 
+    def "release overrides targetCompatibily for legacy toolchain if both are set"() {
+        given:
+        def javaCompile = project.tasks.create("compileJava", JavaCompile)
+
+        when:
+        javaCompile.targetCompatibility = "10"
+        javaCompile.options.release.set(12)
+
+        then:
+        javaCompile.getPlatform().getTargetCompatibility() == JavaVersion.VERSION_12
+    }
 }

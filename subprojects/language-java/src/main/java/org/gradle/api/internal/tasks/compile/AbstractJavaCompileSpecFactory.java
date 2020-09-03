@@ -18,16 +18,30 @@ package org.gradle.api.internal.tasks.compile;
 
 import org.gradle.api.tasks.compile.CompileOptions;
 import org.gradle.internal.Factory;
+import org.gradle.internal.jvm.Jvm;
+import org.gradle.jvm.toolchain.internal.JavaToolchain;
+
+import javax.annotation.Nullable;
 
 public abstract class AbstractJavaCompileSpecFactory<T extends JavaCompileSpec> implements Factory<T> {
     private final CompileOptions compileOptions;
 
-    public AbstractJavaCompileSpecFactory(CompileOptions compileOptions) {
+    private final JavaToolchain toolchain;
+
+    public AbstractJavaCompileSpecFactory(CompileOptions compileOptions, @Nullable JavaToolchain toolchain) {
         this.compileOptions = compileOptions;
+        this.toolchain = toolchain;
+    }
+
+    public AbstractJavaCompileSpecFactory(CompileOptions compileOptions) {
+        this(compileOptions, null);
     }
 
     @Override
     public T create() {
+        if (toolchain != null) {
+            return chooseSpecForToolchain();
+        }
         if (compileOptions.isFork()) {
             if (compileOptions.getForkOptions().getExecutable() != null || compileOptions.getForkOptions().getJavaHome() != null) {
                 return getCommandLineSpec();
@@ -37,6 +51,24 @@ public abstract class AbstractJavaCompileSpecFactory<T extends JavaCompileSpec> 
         } else {
             return getDefaultSpec();
         }
+    }
+
+    private T chooseSpecForToolchain() {
+        if (!toolchain.getJavaMajorVersion().isJava8Compatible()) {
+            return getCommandLineSpec();
+        }
+        if (compileOptions.isFork()) {
+            return getForkingSpec();
+        } else {
+            if (isCurrentVmOurToolchain()) {
+                return getDefaultSpec();
+            }
+            return getForkingSpec();
+        }
+    }
+
+    boolean isCurrentVmOurToolchain() {
+        return toolchain.getJavaHome().equals(Jvm.current().getJavaHome());
     }
 
     abstract protected T getCommandLineSpec();

@@ -210,7 +210,7 @@ class JavaBasePluginTest extends AbstractProjectBuilderSpec {
     void "wires toolchain for sourceset if toolchain is configured"() {
         given:
         def someJdk = Jvm.current()
-        setupProjectWithToolchain(someJdk)
+        setupProjectWithToolchain(someJdk.javaVersion)
 
         when:
         project.sourceSets.create('custom')
@@ -221,10 +221,23 @@ class JavaBasePluginTest extends AbstractProjectBuilderSpec {
         configuredToolchain.displayName.contains(someJdk.javaVersion.getMajorVersion())
     }
 
+    void "source and target compatibility are configured if toolchain is configured"() {
+        given:
+        setupProjectWithToolchain(JavaVersion.VERSION_13)
+
+        when:
+        project.sourceSets.create('custom')
+
+        then:
+        def compileTask = project.tasks.compileJava
+        compileTask.getSourceCompatibility() == "13"
+        compileTask.getTargetCompatibility() == "13"
+    }
+
     void "wires toolchain for test if toolchain is configured"() {
         given:
         def someJdk = Jvm.current()
-        setupProjectWithToolchain(someJdk)
+        setupProjectWithToolchain(someJdk.javaVersion)
 
         when:
         def testTask = project.tasks.named("test", Test).get()
@@ -237,7 +250,7 @@ class JavaBasePluginTest extends AbstractProjectBuilderSpec {
     void "wires toolchain for javadoc if toolchain is configured"() {
         given:
         def someJdk = Jvm.current()
-        setupProjectWithToolchain(someJdk)
+        setupProjectWithToolchain(someJdk.javaVersion)
 
         when:
         def javadocTask = project.tasks.named("javadoc", Javadoc).get()
@@ -247,7 +260,7 @@ class JavaBasePluginTest extends AbstractProjectBuilderSpec {
         configuredJavadocTool.isPresent()
     }
 
-    private void setupProjectWithToolchain(Jvm someJdk) {
+    private void setupProjectWithToolchain(JavaVersion javaVersion) {
         project.pluginManager.apply(JavaPlugin)
         project.java.toolchain.languageVersion = JavaLanguageVersion.of(someJdk.javaVersion.majorVersion)
         // workaround for https://github.com/gradle/gradle/issues/13122

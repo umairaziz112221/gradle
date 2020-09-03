@@ -50,6 +50,11 @@ public class DefaultToolchainJavaCompiler implements JavaCompiler {
         return javaToolchain.findExecutable("javac");
     }
 
+    @Internal
+    public JavaToolchain getToolchain() {
+        return javaToolchain;
+    }
+
     @SuppressWarnings("unchecked")
     public <T extends CompileSpec> WorkResult execute(T spec) {
         LOGGER.info("Compiling with toolchain '{}'.", javaToolchain.getDisplayName());

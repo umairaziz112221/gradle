@@ -146,7 +146,7 @@ public class FxApp extends Application {
 
     @Requires(TestPrecondition.JDK9_OR_LATER)
     @Unroll
-    def "compile with release flag"() {
+    def "compile with release flag using #notation notation"() {
         given:
         goodCode()
         buildFile << """
@@ -442,7 +442,10 @@ class Main {
 
     def writeAnnotationProcessorProject() {
         file("processor").create {
-            file("build.gradle") << "apply plugin: 'java'"
+            file("build.gradle") << """
+                apply plugin: 'java'
+                ${compilerConfiguration()}
+            """
             "src/main" {
                 file("resources/META-INF/services/javax.annotation.processing.Processor") << "com.test.SimpleAnnotationProcessor"
                 "java/com/test/" {
