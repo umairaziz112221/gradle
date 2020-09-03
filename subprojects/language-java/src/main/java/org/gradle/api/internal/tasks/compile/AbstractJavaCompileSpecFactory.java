@@ -19,16 +19,16 @@ package org.gradle.api.internal.tasks.compile;
 import org.gradle.api.tasks.compile.CompileOptions;
 import org.gradle.internal.Factory;
 import org.gradle.internal.jvm.Jvm;
-import org.gradle.jvm.toolchain.internal.JavaToolchain;
+import org.gradle.jvm.toolchain.JavaInstallationMetadata;
 
 import javax.annotation.Nullable;
 
 public abstract class AbstractJavaCompileSpecFactory<T extends JavaCompileSpec> implements Factory<T> {
     private final CompileOptions compileOptions;
 
-    private final JavaToolchain toolchain;
+    private final JavaInstallationMetadata toolchain;
 
-    public AbstractJavaCompileSpecFactory(CompileOptions compileOptions, @Nullable JavaToolchain toolchain) {
+    public AbstractJavaCompileSpecFactory(CompileOptions compileOptions, @Nullable JavaInstallationMetadata toolchain) {
         this.compileOptions = compileOptions;
         this.toolchain = toolchain;
     }
@@ -54,7 +54,7 @@ public abstract class AbstractJavaCompileSpecFactory<T extends JavaCompileSpec> 
     }
 
     private T chooseSpecForToolchain() {
-        if (!toolchain.getJavaMajorVersion().isJava8Compatible()) {
+        if (!toolchain.getLanguageVersion().canCompileOrRun(8)) {
             return getCommandLineSpec();
         }
         if (compileOptions.isFork()) {
@@ -68,7 +68,7 @@ public abstract class AbstractJavaCompileSpecFactory<T extends JavaCompileSpec> 
     }
 
     boolean isCurrentVmOurToolchain() {
-        return toolchain.getJavaHome().equals(Jvm.current().getJavaHome());
+        return toolchain.getInstallationPath().getAsFile().equals(Jvm.current().getJavaHome());
     }
 
     abstract protected T getCommandLineSpec();

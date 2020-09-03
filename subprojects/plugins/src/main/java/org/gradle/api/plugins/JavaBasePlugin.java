@@ -54,7 +54,6 @@ import org.gradle.internal.deprecation.DeprecatableConfiguration;
 import org.gradle.jvm.toolchain.JavaInstallationRegistry;
 import org.gradle.jvm.toolchain.JavaToolchainService;
 import org.gradle.jvm.toolchain.internal.DefaultJavaToolchainService;
-import org.gradle.jvm.toolchain.internal.DefaultToolchainJavaCompiler;
 import org.gradle.jvm.toolchain.internal.JavaToolchain;
 import org.gradle.jvm.toolchain.internal.JavaToolchainQueryService;
 import org.gradle.language.base.plugins.LifecycleBasePlugin;
@@ -321,7 +320,7 @@ public class JavaBasePlugin implements Plugin<Project> {
                     return JavaVersion.toVersion(javaCompile.getOptions().getRelease().get()).toString();
                 }
                 if (javaCompile.getJavaCompiler().isPresent()) {
-                    return ((DefaultToolchainJavaCompiler) javaCompile.getJavaCompiler().get()).getJavaToolchain().getJavaMajorVersion().toString();
+                    return javaCompile.getJavaCompiler().get().getMetadata().getLanguageVersion().toString();
                 }
             }
             return javaVersionSupplier.get().toString();

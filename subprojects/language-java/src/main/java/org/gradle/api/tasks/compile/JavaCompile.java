@@ -71,7 +71,6 @@ import org.gradle.jvm.toolchain.JavaCompiler;
 import org.gradle.jvm.toolchain.JavaInstallationMetadata;
 import org.gradle.jvm.toolchain.JavaToolChain;
 import org.gradle.jvm.toolchain.internal.DefaultToolchainJavaCompiler;
-import org.gradle.jvm.toolchain.internal.JavaToolchain;
 import org.gradle.language.base.internal.compile.Compiler;
 import org.gradle.language.base.internal.compile.CompilerUtil;
 import org.gradle.work.Incremental;
@@ -375,9 +374,8 @@ public class JavaCompile extends AbstractCompile implements HasCompileOptions {
     }
 
     private boolean isToolchainCompatibleWithJava8() {
-        JavaToolchain newToolchain = getToolchain();
-        if (newToolchain != null) {
-            return newToolchain.getLanguageVersion().canCompileOrRun(8);
+        if (javaCompiler.isPresent()) {
+            return getToolchain().getLanguageVersion().canCompileOrRun(8);
         }
         return ((JavaToolChainInternal) getToolChain()).getJavaVersion().isJava8Compatible();
     }
@@ -391,18 +389,17 @@ public class JavaCompile extends AbstractCompile implements HasCompileOptions {
     }
 
     private void applyToolchain(ForkOptions forkOptions) {
-        final JavaToolchain toolchain = getToolchain();
-        forkOptions.setJavaHome(toolchain.getInstallationPath().getAsFile());
+        final JavaInstallationMetadata metadata = getToolchain();
+        forkOptions.setJavaHome(metadata.getInstallationPath().getAsFile());
     }
 
     @Nullable
-    private JavaToolchain getToolchain() {
-        return javaCompiler.map(c -> ((DefaultToolchainJavaCompiler) javaCompiler.get()).getToolchain()).getOrNull();
+    private JavaInstallationMetadata getToolchain() {
+        return javaCompiler.map(JavaCompiler::getMetadata).getOrNull();
     }
 
     private void configureCompatibilityOptions(DefaultJavaCompileSpec spec) {
-        final JavaToolchain toolchain = getToolchain();
-        if (toolchain != null) {
+        if (javaCompiler.isPresent()) {
             final JavaInstallationMetadata metadata = javaCompiler.get().getMetadata();
             spec.setTargetCompatibility(metadata.getLanguageVersion().asString());
             spec.setSourceCompatibility(metadata.getLanguageVersion().asString());

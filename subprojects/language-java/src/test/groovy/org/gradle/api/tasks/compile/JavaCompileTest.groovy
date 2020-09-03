@@ -18,8 +18,6 @@ package org.gradle.api.tasks.compile
 
 import org.gradle.api.JavaVersion
 import org.gradle.api.internal.file.TestFiles
-import org.gradle.api.internal.tasks.compile.CommandLineJavaCompileSpec
-import org.gradle.api.file.Directory
 import org.gradle.api.internal.tasks.compile.DefaultJavaCompileSpec
 import org.gradle.internal.jvm.Jvm
 import org.gradle.jvm.toolchain.JavaCompiler

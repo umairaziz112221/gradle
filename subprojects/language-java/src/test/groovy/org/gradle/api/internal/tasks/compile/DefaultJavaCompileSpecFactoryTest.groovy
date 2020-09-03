@@ -16,10 +16,11 @@
 
 package org.gradle.api.internal.tasks.compile
 
-import org.gradle.api.JavaVersion
+import org.gradle.api.internal.file.TestFiles
 import org.gradle.api.model.ObjectFactory
 import org.gradle.api.tasks.compile.CompileOptions
 import org.gradle.internal.jvm.Jvm
+import org.gradle.jvm.toolchain.JavaLanguageVersion
 import org.gradle.jvm.toolchain.internal.JavaToolchain
 import spock.lang.Specification
 import spock.lang.Unroll
@@ -34,8 +35,8 @@ class DefaultJavaCompileSpecFactoryTest extends Specification {
         def toolchain = null
         if (toolchainHome != null) {
             toolchain = Mock(JavaToolchain)
-            toolchain.javaHome >> toolchainHome
-            toolchain.javaMajorVersion >> JavaVersion.VERSION_1_8
+            toolchain.installationPath >> TestFiles.fileFactory().dir(toolchainHome)
+            toolchain.languageVersion >> JavaLanguageVersion.of(8)
         }
         DefaultJavaCompileSpecFactory factory = new DefaultJavaCompileSpecFactory(options, toolchain)
 
@@ -52,7 +53,7 @@ class DefaultJavaCompileSpecFactoryTest extends Specification {
         false | null       | false             | false                 | null
         true  | null       | true              | false                 | null
         true  | "X"        | false             | true                  | null
-        true  | "X"        | true              | false                 | "X"
+        true | "X" | true | false | File.createTempDir()
         false | null       | false             | false                 | Jvm.current().javaHome
     }
 
