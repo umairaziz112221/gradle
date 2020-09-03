@@ -262,7 +262,7 @@ class JavaBasePluginTest extends AbstractProjectBuilderSpec {
 
     private void setupProjectWithToolchain(JavaVersion javaVersion) {
         project.pluginManager.apply(JavaPlugin)
-        project.java.toolchain.languageVersion = JavaLanguageVersion.of(someJdk.javaVersion.majorVersion)
+        project.java.toolchain.languageVersion = JavaLanguageVersion.of(javaVersion.majorVersion)
         // workaround for https://github.com/gradle/gradle/issues/13122
         ((DefaultProject) project).getServices().get(GradlePropertiesController.class).loadGradlePropertiesFrom(project.projectDir)
     }

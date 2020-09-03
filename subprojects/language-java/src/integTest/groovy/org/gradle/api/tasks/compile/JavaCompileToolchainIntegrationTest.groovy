@@ -86,7 +86,7 @@ class JavaCompileToolchainIntegrationTest extends AbstractPluginIntegrationTest 
 
             java {
                 toolchain {
-                    languageVersion = JavaVersion.VERSION_1_7
+                    languageVersion = JavaLanguageVersion.of(7)
                 }
             }
         """
@@ -139,7 +139,7 @@ public class Foo {
 
             java {
                 toolchain {
-                    languageVersion = JavaVersion.VERSION_1_8
+                    languageVersion = JavaLanguageVersion.of(8)
                 }
             }
         """
