@@ -356,6 +356,7 @@ public class JavaCompile extends AbstractCompile implements HasCompileOptions {
         boolean isModule = JavaModuleDetector.isModuleSource(modularity.getInferModulePath().get(), sourcesRoots);
 
         final DefaultJavaCompileSpec spec = createBaseSpec();
+
         spec.setDestinationDir(getDestinationDirectory().getAsFile().get());
         spec.setWorkingDir(getProjectLayout().getProjectDirectory().getAsFile());
         spec.setTempDir(getTemporaryDir());
